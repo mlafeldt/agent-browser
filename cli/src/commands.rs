@@ -6,28 +6,44 @@ use crate::flags::Flags;
 
 /// Extract --frame flag from args, returning (frame_selector, remaining_args)
 /// Supports both `--frame value` and `--frame=value` syntax
-fn extract_frame_flag<'a>(args: &[&'a str]) -> (Option<String>, Vec<&'a str>) {
+/// Returns Err if --frame is provided without a value
+fn extract_frame_flag<'a>(args: &[&'a str]) -> Result<(Option<String>, Vec<&'a str>), ParseError> {
     let mut frame: Option<String> = None;
     let mut rest: Vec<&'a str> = Vec::new();
     let mut i = 0;
     while i < args.len() {
         let arg = args[i];
         if arg == "--frame" {
-            frame = args.get(i + 1).map(|s| s.to_string());
-            i += 2;
+            // Check if next arg exists and isn't another flag
+            match args.get(i + 1) {
+                Some(val) if !val.starts_with("--") => {
+                    frame = Some(val.to_string());
+                    i += 2;
+                }
+                _ => {
+                    return Err(ParseError::MissingArguments {
+                        context: "--frame".to_string(),
+                        usage: "--frame <selector|name=...|@ref>",
+                    })
+                }
+            }
             continue;
         }
         if let Some(value) = arg.strip_prefix("--frame=") {
-            if !value.is_empty() {
-                frame = Some(value.to_string());
+            if value.is_empty() {
+                return Err(ParseError::MissingArguments {
+                    context: "--frame".to_string(),
+                    usage: "--frame=<selector|name=...|@ref>",
+                });
             }
+            frame = Some(value.to_string());
             i += 1;
             continue;
         }
         rest.push(arg);
         i += 1;
     }
-    (frame, rest)
+    Ok((frame, rest))
 }
 
 /// Error type for command parsing with contextual information
@@ -143,7 +159,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
 
         // === Core Actions ===
         "click" => {
-            let (frame, rest) = extract_frame_flag(&rest);
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "click".to_string(),
                 usage: "click [--frame <frame>] <selector>",
@@ -155,7 +171,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
             Ok(cmd)
         }
         "dblclick" => {
-            let (frame, rest) = extract_frame_flag(&rest);
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "dblclick".to_string(),
                 usage: "dblclick [--frame <frame>] <selector>",
@@ -167,7 +183,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
             Ok(cmd)
         }
         "fill" => {
-            let (frame, rest) = extract_frame_flag(&rest);
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "fill".to_string(),
                 usage: "fill [--frame <frame>] <selector> <text>",
@@ -179,7 +195,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
             Ok(cmd)
         }
         "type" => {
-            let (frame, rest) = extract_frame_flag(&rest);
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "type".to_string(),
                 usage: "type [--frame <frame>] <selector> <text>",
@@ -192,7 +208,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
             Ok(cmd)
         }
         "hover" => {
-            let (frame, rest) = extract_frame_flag(&rest);
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "hover".to_string(),
                 usage: "hover [--frame <frame>] <selector>",
@@ -204,7 +220,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
             Ok(cmd)
         }
         "focus" => {
-            let (frame, rest) = extract_frame_flag(&rest);
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "focus".to_string(),
                 usage: "focus [--frame <frame>] <selector>",
@@ -216,7 +232,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
             Ok(cmd)
         }
         "check" => {
-            let (frame, rest) = extract_frame_flag(&rest);
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "check".to_string(),
                 usage: "check [--frame <frame>] <selector>",
@@ -228,7 +244,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
             Ok(cmd)
         }
         "uncheck" => {
-            let (frame, rest) = extract_frame_flag(&rest);
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "uncheck".to_string(),
                 usage: "uncheck [--frame <frame>] <selector>",
@@ -240,7 +256,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
             Ok(cmd)
         }
         "select" => {
-            let (frame, rest) = extract_frame_flag(&rest);
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "select".to_string(),
                 usage: "select [--frame <frame>] <selector> <value...>",
@@ -261,7 +277,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
             Ok(cmd)
         }
         "drag" => {
-            let (frame, rest) = extract_frame_flag(&rest);
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let src = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "drag".to_string(),
                 usage: "drag [--frame <frame>] <source> <target>",
@@ -277,7 +293,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
             Ok(cmd)
         }
         "upload" => {
-            let (frame, rest) = extract_frame_flag(&rest);
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "upload".to_string(),
                 usage: "upload [--frame <frame>] <selector> <files...>",
@@ -303,7 +319,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
 
         // === Keyboard ===
         "press" | "key" => {
-            let (frame, rest) = extract_frame_flag(&rest);
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let key = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "press".to_string(),
                 usage: "press [--frame <frame>] [selector] <key>",
@@ -354,7 +370,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
         // === Wait ===
         "wait" => {
             // Extract --frame first (only applies to selector mode)
-            let (frame, rest) = extract_frame_flag(&rest);
+            let (frame, rest) = extract_frame_flag(&rest)?;
 
             // Check for --url flag: wait --url "**/dashboard"
             if let Some(idx) = rest.iter().position(|&s| s == "--url" || s == "-u") {
