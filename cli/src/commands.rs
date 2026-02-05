@@ -2102,6 +2102,15 @@ mod tests {
         assert!(matches!(err, ParseError::MissingArguments { context, .. } if context == "--frame"));
     }
 
+    #[test]
+    fn test_frame_flag_at_end() {
+        // --frame can appear after selector (extract_frame_flag handles any position)
+        let cmd = parse_command(&args("click btn --frame @f1"), &default_flags()).unwrap();
+        assert_eq!(cmd["action"], "click");
+        assert_eq!(cmd["selector"], "btn");
+        assert_eq!(cmd["frame"], "@f1");
+    }
+
     // === Tabs ===
 
     #[test]
