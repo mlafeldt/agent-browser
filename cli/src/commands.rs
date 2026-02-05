@@ -5,19 +5,29 @@ use std::io::{self, BufRead};
 use crate::flags::Flags;
 
 /// Extract --frame flag from args, returning (frame_selector, remaining_args)
-fn extract_frame_flag<'a>(args: &[&'a str]) -> (Option<&'a str>, Vec<&'a str>) {
-    if let Some(idx) = args.iter().position(|&s| s == "--frame") {
-        let frame = args.get(idx + 1).copied();
-        let rest: Vec<_> = args
-            .iter()
-            .enumerate()
-            .filter(|(i, _)| *i != idx && *i != idx + 1)
-            .map(|(_, s)| *s)
-            .collect();
-        (frame, rest)
-    } else {
-        (None, args.to_vec())
+/// Supports both `--frame value` and `--frame=value` syntax
+fn extract_frame_flag<'a>(args: &[&'a str]) -> (Option<String>, Vec<&'a str>) {
+    let mut frame: Option<String> = None;
+    let mut rest: Vec<&'a str> = Vec::new();
+    let mut i = 0;
+    while i < args.len() {
+        let arg = args[i];
+        if arg == "--frame" {
+            frame = args.get(i + 1).map(|s| s.to_string());
+            i += 2;
+            continue;
+        }
+        if let Some(value) = arg.strip_prefix("--frame=") {
+            if !value.is_empty() {
+                frame = Some(value.to_string());
+            }
+            i += 1;
+            continue;
+        }
+        rest.push(arg);
+        i += 1;
     }
+    (frame, rest)
 }
 
 /// Error type for command parsing with contextual information
@@ -174,7 +184,8 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "type".to_string(),
                 usage: "type [--frame <frame>] <selector> <text>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "type", "selector": sel, "text": rest[1..].join(" ") });
+            let mut cmd =
+                json!({ "id": id, "action": "type", "selector": sel, "text": rest[1..].join(" ") });
             if let Some(f) = frame {
                 cmd["frame"] = json!(f);
             }
@@ -266,7 +277,8 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "upload".to_string(),
                 usage: "upload [--frame <frame>] <selector> <files...>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "upload", "selector": sel, "files": &rest[1..] });
+            let mut cmd =
+                json!({ "id": id, "action": "upload", "selector": sel, "files": &rest[1..] });
             if let Some(f) = frame {
                 cmd["frame"] = json!(f);
             }
@@ -508,17 +520,22 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
             let script = if is_stdin {
                 // Read script from stdin
                 let stdin = io::stdin();
-                let lines: Vec<String> = stdin.lock().lines()
+                let lines: Vec<String> = stdin
+                    .lock()
+                    .lines()
                     .map(|l| l.unwrap_or_default())
                     .collect();
                 lines.join("\n")
             } else {
                 let raw_script = script_parts.join(" ");
                 if is_base64 {
-                    let decoded = STANDARD.decode(&raw_script).map_err(|_| ParseError::InvalidValue {
-                        message: "Invalid base64 encoding".to_string(),
-                        usage: "eval -b <base64-encoded-script>",
-                    })?;
+                    let decoded =
+                        STANDARD
+                            .decode(&raw_script)
+                            .map_err(|_| ParseError::InvalidValue {
+                                message: "Invalid base64 encoding".to_string(),
+                                usage: "eval -b <base64-encoded-script>",
+                            })?;
                     String::from_utf8(decoded).map_err(|_| ParseError::InvalidValue {
                         message: "Base64 decoded to invalid UTF-8".to_string(),
                         usage: "eval -b <base64-encoded-script>",
@@ -934,7 +951,9 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
             let mut cmd = json!({ "id": id, "action": "swipe", "direction": direction });
             if let Some(distance) = rest.get(1) {
                 if let Ok(d) = distance.parse::<u32>() {
-                    cmd.as_object_mut().unwrap().insert("distance".to_string(), json!(d));
+                    cmd.as_object_mut()
+                        .unwrap()
+                        .insert("distance".to_string(), json!(d));
                 }
             }
             Ok(cmd)
@@ -1925,6 +1944,18 @@ mod tests {
         assert_eq!(cmd["frame"], "name=stripe_frame");
     }
 
+    #[test]
+    fn test_fill_with_frame_equals_syntax() {
+        let cmd = parse_command(
+            &args("fill --frame=iframe[name='stripe'] input 4242"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "fill");
+        assert_eq!(cmd["selector"], "input");
+        assert_eq!(cmd["frame"], "iframe[name='stripe']");
+    }
+
     // === Tabs ===
 
     #[test]
@@ -2249,8 +2280,11 @@ mod tests {
     #[test]
     fn test_eval_base64_long_flag() {
         // "document.title" in base64
-        let cmd =
-            parse_command(&args("eval --base64 ZG9jdW1lbnQudGl0bGU="), &default_flags()).unwrap();
+        let cmd = parse_command(
+            &args("eval --base64 ZG9jdW1lbnQudGl0bGU="),
+            &default_flags(),
+        )
+        .unwrap();
         assert_eq!(cmd["action"], "evaluate");
         assert_eq!(cmd["script"], "document.title");
     }
