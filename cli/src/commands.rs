@@ -2043,6 +2043,126 @@ mod tests {
         assert_eq!(cmd["frame"], "iframe[name='payment']");
     }
 
+    #[test]
+    fn test_dblclick_with_frame() {
+        let cmd = parse_command(
+            &args("dblclick --frame iframe.editor .cell"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "dblclick");
+        assert_eq!(cmd["selector"], ".cell");
+        assert_eq!(cmd["frame"], "iframe.editor");
+    }
+
+    #[test]
+    fn test_type_with_frame() {
+        let cmd = parse_command(
+            &args("type --frame name=input_frame input hello world"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "type");
+        assert_eq!(cmd["selector"], "input");
+        assert_eq!(cmd["text"], "hello world");
+        assert_eq!(cmd["frame"], "name=input_frame");
+    }
+
+    #[test]
+    fn test_hover_with_frame() {
+        let cmd = parse_command(
+            &args("hover --frame @e3 .tooltip-trigger"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "hover");
+        assert_eq!(cmd["selector"], ".tooltip-trigger");
+        assert_eq!(cmd["frame"], "@e3");
+    }
+
+    #[test]
+    fn test_focus_with_frame() {
+        let cmd = parse_command(
+            &args("focus --frame iframe[title='Form'] input[name='email']"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "focus");
+        assert_eq!(cmd["selector"], "input[name='email']");
+        assert_eq!(cmd["frame"], "iframe[title='Form']");
+    }
+
+    #[test]
+    fn test_check_with_frame() {
+        let cmd = parse_command(
+            &args("check --frame iframe.terms #agree"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "check");
+        assert_eq!(cmd["selector"], "#agree");
+        assert_eq!(cmd["frame"], "iframe.terms");
+    }
+
+    #[test]
+    fn test_uncheck_with_frame() {
+        let cmd = parse_command(
+            &args("uncheck --frame iframe.prefs #newsletter"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "uncheck");
+        assert_eq!(cmd["selector"], "#newsletter");
+        assert_eq!(cmd["frame"], "iframe.prefs");
+    }
+
+    #[test]
+    fn test_upload_with_frame() {
+        let cmd = parse_command(
+            &args("upload --frame iframe.uploader input[type='file'] /tmp/test.png"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "upload");
+        assert_eq!(cmd["selector"], "input[type='file']");
+        assert_eq!(cmd["frame"], "iframe.uploader");
+    }
+
+    #[test]
+    fn test_select_with_frame() {
+        let cmd = parse_command(
+            &args("select --frame iframe.form select#country US"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "select");
+        assert_eq!(cmd["selector"], "select#country");
+        assert_eq!(cmd["values"], "US");
+        assert_eq!(cmd["frame"], "iframe.form");
+    }
+
+    #[test]
+    fn test_frame_flag_missing_value() {
+        let err = parse_command(&args("click --frame"), &default_flags()).unwrap_err();
+        match err {
+            ParseError::MissingArguments { context, .. } => {
+                assert_eq!(context, "--frame");
+            }
+            _ => panic!("Expected MissingArguments error"),
+        }
+    }
+
+    #[test]
+    fn test_frame_flag_empty_value() {
+        let err = parse_command(&args("click --frame= button"), &default_flags()).unwrap_err();
+        match err {
+            ParseError::MissingArguments { context, .. } => {
+                assert_eq!(context, "--frame");
+            }
+            _ => panic!("Expected MissingArguments error"),
+        }
+    }
+
     // === Tabs ===
 
     #[test]
