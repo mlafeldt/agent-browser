@@ -352,12 +352,17 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
 
         // === Scroll ===
         "scroll" => {
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let dir = rest.get(0).unwrap_or(&"down");
             let amount = rest
                 .get(1)
                 .and_then(|s| s.parse::<i32>().ok())
                 .unwrap_or(300);
-            Ok(json!({ "id": id, "action": "scroll", "direction": dir, "amount": amount }))
+            let mut cmd = json!({ "id": id, "action": "scroll", "direction": dir, "amount": amount });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         "scrollintoview" | "scrollinto" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -2056,6 +2061,7 @@ mod tests {
             ("scrollintoview --frame @f1 .el", "scrollintoview", "selector", ".el", "@f1"),
             ("highlight --frame @f1 .el", "highlight", "selector", ".el", "@f1"),
             ("tap --frame @f1 btn", "tap", "selector", "btn", "@f1"),
+            ("scroll --frame @f1 down", "scroll", "direction", "down", "@f1"),
             // Test --frame=value syntax
             ("fill --frame=iframe.x input val", "fill", "selector", "input", "iframe.x"),
         ];
