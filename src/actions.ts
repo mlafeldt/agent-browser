@@ -534,8 +534,15 @@ async function handleType(command: TypeCommand, browser: BrowserManager): Promis
 async function handlePress(command: PressCommand, browser: BrowserManager): Promise<Response> {
   if (command.selector) {
     const locator = browser.getLocator(command.selector, command.frame);
-    await locator.press(command.key);
+    try {
+      await locator.press(command.key);
+    } catch (error) {
+      throw toAIFriendlyError(error, command.selector);
+    }
   } else {
+    if (command.frame) {
+      throw new Error('--frame requires a selector. Use: press --frame <frame> <selector> <key>');
+    }
     const page = browser.getPage();
     await page.keyboard.press(command.key);
   }
@@ -634,10 +641,14 @@ async function handleWait(command: WaitCommand, browser: BrowserManager): Promis
 
   if (command.selector) {
     const locator = browser.getLocator(command.selector, command.frame);
-    await locator.waitFor({
-      state: command.state ?? 'visible',
-      timeout: command.timeout,
-    });
+    try {
+      await locator.waitFor({
+        state: command.state ?? 'visible',
+        timeout: command.timeout,
+      });
+    } catch (error) {
+      throw toAIFriendlyError(error, command.selector);
+    }
   } else if (command.timeout) {
     await page.waitForTimeout(command.timeout);
   } else {
@@ -861,14 +872,18 @@ async function handleFocus(command: FocusCommand, browser: BrowserManager): Prom
 }
 
 async function handleDrag(command: DragCommand, browser: BrowserManager): Promise<Response> {
-  if (command.frame) {
-    // Use locators for cross-origin iframe support
-    const sourceLocator = browser.getLocator(command.source, command.frame);
-    const targetLocator = browser.getLocator(command.target, command.frame);
-    await sourceLocator.dragTo(targetLocator);
-  } else {
-    const frame = browser.getFrame();
-    await frame.dragAndDrop(command.source, command.target);
+  try {
+    if (command.frame) {
+      // Use locators for cross-origin iframe support (source and target must be in same frame)
+      const sourceLocator = browser.getLocator(command.source, command.frame);
+      const targetLocator = browser.getLocator(command.target, command.frame);
+      await sourceLocator.dragTo(targetLocator);
+    } else {
+      const frame = browser.getFrame();
+      await frame.dragAndDrop(command.source, command.target);
+    }
+  } catch (error) {
+    throw toAIFriendlyError(error, command.source);
   }
   return successResponse(command.id, { dragged: true });
 }
