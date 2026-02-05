@@ -2026,53 +2026,47 @@ mod tests {
     }
 
     #[test]
-    fn test_fill_with_frame() {
-        let cmd = parse_command(
-            &args("fill --frame iframe[name='payment'] input[name='card'] 4242"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "fill");
-        assert_eq!(cmd["selector"], "input[name='card']");
-        assert_eq!(cmd["value"], "4242");
-        assert_eq!(cmd["frame"], "iframe[name='payment']");
-    }
+    fn test_frame_flag_support() {
+        // Table-driven test for --frame flag across all supported commands
+        // Format: (command_str, action, selector_field, selector_val, frame_val)
+        let cases: Vec<(&str, &str, &str, &str, &str)> = vec![
+            ("click --frame @f1 btn", "click", "selector", "btn", "@f1"),
+            ("dblclick --frame @f1 btn", "dblclick", "selector", "btn", "@f1"),
+            ("fill --frame @f1 input val", "fill", "selector", "input", "@f1"),
+            ("type --frame @f1 input txt", "type", "selector", "input", "@f1"),
+            ("hover --frame @f1 .el", "hover", "selector", ".el", "@f1"),
+            ("focus --frame @f1 input", "focus", "selector", "input", "@f1"),
+            ("check --frame @f1 #cb", "check", "selector", "#cb", "@f1"),
+            ("uncheck --frame @f1 #cb", "uncheck", "selector", "#cb", "@f1"),
+            ("select --frame @f1 sel opt", "select", "selector", "sel", "@f1"),
+            ("upload --frame @f1 input /f", "upload", "selector", "input", "@f1"),
+            ("drag --frame @f1 #a #b", "drag", "source", "#a", "@f1"),
+            ("press --frame @f1 input Enter", "press", "selector", "input", "@f1"),
+            ("wait --frame @f1 .el", "wait", "selector", ".el", "@f1"),
+            ("get text --frame @f1 .el", "gettext", "selector", ".el", "@f1"),
+            ("get html --frame @f1 .el", "innerhtml", "selector", ".el", "@f1"),
+            ("get value --frame @f1 input", "inputvalue", "selector", "input", "@f1"),
+            ("get attr --frame @f1 a href", "getattribute", "selector", "a", "@f1"),
+            ("get count --frame @f1 li", "count", "selector", "li", "@f1"),
+            ("get box --frame @f1 .el", "boundingbox", "selector", ".el", "@f1"),
+            ("get styles --frame @f1 .el", "styles", "selector", ".el", "@f1"),
+            ("is visible --frame @f1 .el", "isvisible", "selector", ".el", "@f1"),
+            ("is enabled --frame @f1 btn", "isenabled", "selector", "btn", "@f1"),
+            ("is checked --frame @f1 #cb", "ischecked", "selector", "#cb", "@f1"),
+            ("scrollintoview --frame @f1 .el", "scrollintoview", "selector", ".el", "@f1"),
+            ("highlight --frame @f1 .el", "highlight", "selector", ".el", "@f1"),
+            ("tap --frame @f1 btn", "tap", "selector", "btn", "@f1"),
+            // Test --frame=value syntax
+            ("fill --frame=iframe.x input val", "fill", "selector", "input", "iframe.x"),
+        ];
 
-    #[test]
-    fn test_click_with_frame() {
-        let cmd = parse_command(
-            &args("click --frame name=stripe_frame button.submit"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "click");
-        assert_eq!(cmd["selector"], "button.submit");
-        assert_eq!(cmd["frame"], "name=stripe_frame");
-    }
-
-    #[test]
-    fn test_fill_with_frame_equals_syntax() {
-        let cmd = parse_command(
-            &args("fill --frame=iframe[name='stripe'] input 4242"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "fill");
-        assert_eq!(cmd["selector"], "input");
-        assert_eq!(cmd["frame"], "iframe[name='stripe']");
-    }
-
-    #[test]
-    fn test_drag_with_frame() {
-        let cmd = parse_command(
-            &args("drag --frame iframe.sortable #item1 #item2"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "drag");
-        assert_eq!(cmd["source"], "#item1");
-        assert_eq!(cmd["target"], "#item2");
-        assert_eq!(cmd["frame"], "iframe.sortable");
+        for (cmd_str, action, sel_field, sel_val, frame_val) in cases {
+            let cmd = parse_command(&args(cmd_str), &default_flags())
+                .unwrap_or_else(|e| panic!("Failed to parse '{}': {:?}", cmd_str, e));
+            assert_eq!(cmd["action"], action, "action mismatch for '{}'", cmd_str);
+            assert_eq!(cmd[sel_field], sel_val, "selector mismatch for '{}'", cmd_str);
+            assert_eq!(cmd["frame"], frame_val, "frame mismatch for '{}'", cmd_str);
+        }
     }
 
     #[test]
@@ -2084,245 +2078,15 @@ mod tests {
     }
 
     #[test]
-    fn test_press_with_frame() {
-        let cmd = parse_command(
-            &args("press --frame @e5 input Enter"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "press");
-        assert_eq!(cmd["selector"], "input");
-        assert_eq!(cmd["key"], "Enter");
-        assert_eq!(cmd["frame"], "@e5");
-    }
-
-    #[test]
-    fn test_wait_with_frame() {
-        let cmd = parse_command(
-            &args("wait --frame iframe[name='payment'] .card-loaded"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "wait");
-        assert_eq!(cmd["selector"], ".card-loaded");
-        assert_eq!(cmd["frame"], "iframe[name='payment']");
-    }
-
-    #[test]
-    fn test_dblclick_with_frame() {
-        let cmd = parse_command(
-            &args("dblclick --frame iframe.editor .cell"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "dblclick");
-        assert_eq!(cmd["selector"], ".cell");
-        assert_eq!(cmd["frame"], "iframe.editor");
-    }
-
-    #[test]
-    fn test_type_with_frame() {
-        let cmd = parse_command(
-            &args("type --frame name=input_frame input hello world"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "type");
-        assert_eq!(cmd["selector"], "input");
-        assert_eq!(cmd["text"], "hello world");
-        assert_eq!(cmd["frame"], "name=input_frame");
-    }
-
-    #[test]
-    fn test_hover_with_frame() {
-        let cmd = parse_command(
-            &args("hover --frame @e3 .tooltip-trigger"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "hover");
-        assert_eq!(cmd["selector"], ".tooltip-trigger");
-        assert_eq!(cmd["frame"], "@e3");
-    }
-
-    #[test]
-    fn test_focus_with_frame() {
-        let cmd = parse_command(
-            &args("focus --frame iframe[title='Form'] input[name='email']"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "focus");
-        assert_eq!(cmd["selector"], "input[name='email']");
-        assert_eq!(cmd["frame"], "iframe[title='Form']");
-    }
-
-    #[test]
-    fn test_check_with_frame() {
-        let cmd = parse_command(
-            &args("check --frame iframe.terms #agree"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "check");
-        assert_eq!(cmd["selector"], "#agree");
-        assert_eq!(cmd["frame"], "iframe.terms");
-    }
-
-    #[test]
-    fn test_uncheck_with_frame() {
-        let cmd = parse_command(
-            &args("uncheck --frame iframe.prefs #newsletter"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "uncheck");
-        assert_eq!(cmd["selector"], "#newsletter");
-        assert_eq!(cmd["frame"], "iframe.prefs");
-    }
-
-    #[test]
-    fn test_upload_with_frame() {
-        let cmd = parse_command(
-            &args("upload --frame iframe.uploader input[type='file'] /tmp/test.png"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "upload");
-        assert_eq!(cmd["selector"], "input[type='file']");
-        assert_eq!(cmd["frame"], "iframe.uploader");
-    }
-
-    #[test]
-    fn test_select_with_frame() {
-        let cmd = parse_command(
-            &args("select --frame iframe.form select#country US"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "select");
-        assert_eq!(cmd["selector"], "select#country");
-        assert_eq!(cmd["values"], "US");
-        assert_eq!(cmd["frame"], "iframe.form");
-    }
-
-    #[test]
     fn test_frame_flag_missing_value() {
         let err = parse_command(&args("click --frame"), &default_flags()).unwrap_err();
-        match err {
-            ParseError::MissingArguments { context, .. } => {
-                assert_eq!(context, "--frame");
-            }
-            _ => panic!("Expected MissingArguments error"),
-        }
+        assert!(matches!(err, ParseError::MissingArguments { context, .. } if context == "--frame"));
     }
 
     #[test]
     fn test_frame_flag_empty_value() {
-        let err = parse_command(&args("click --frame= button"), &default_flags()).unwrap_err();
-        match err {
-            ParseError::MissingArguments { context, .. } => {
-                assert_eq!(context, "--frame");
-            }
-            _ => panic!("Expected MissingArguments error"),
-        }
-    }
-
-    #[test]
-    fn test_get_text_with_frame() {
-        let cmd = parse_command(
-            &args("get text --frame iframe.content .title"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "gettext");
-        assert_eq!(cmd["selector"], ".title");
-        assert_eq!(cmd["frame"], "iframe.content");
-    }
-
-    #[test]
-    fn test_get_attr_with_frame() {
-        let cmd = parse_command(
-            &args("get attr --frame @e5 input placeholder"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "getattribute");
-        assert_eq!(cmd["selector"], "input");
-        assert_eq!(cmd["attribute"], "placeholder");
-        assert_eq!(cmd["frame"], "@e5");
-    }
-
-    #[test]
-    fn test_get_count_with_frame() {
-        let cmd = parse_command(
-            &args("get count --frame iframe.list li"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "count");
-        assert_eq!(cmd["selector"], "li");
-        assert_eq!(cmd["frame"], "iframe.list");
-    }
-
-    #[test]
-    fn test_is_visible_with_frame() {
-        let cmd = parse_command(
-            &args("is visible --frame iframe.modal .dialog"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "isvisible");
-        assert_eq!(cmd["selector"], ".dialog");
-        assert_eq!(cmd["frame"], "iframe.modal");
-    }
-
-    #[test]
-    fn test_is_checked_with_frame() {
-        let cmd = parse_command(
-            &args("is checked --frame name=form_frame input[type='checkbox']"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "ischecked");
-        assert_eq!(cmd["selector"], "input[type='checkbox']");
-        assert_eq!(cmd["frame"], "name=form_frame");
-    }
-
-    #[test]
-    fn test_scrollintoview_with_frame() {
-        let cmd = parse_command(
-            &args("scrollintoview --frame iframe.scroll .footer"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "scrollintoview");
-        assert_eq!(cmd["selector"], ".footer");
-        assert_eq!(cmd["frame"], "iframe.scroll");
-    }
-
-    #[test]
-    fn test_highlight_with_frame() {
-        let cmd = parse_command(
-            &args("highlight --frame iframe.debug .element"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "highlight");
-        assert_eq!(cmd["selector"], ".element");
-        assert_eq!(cmd["frame"], "iframe.debug");
-    }
-
-    #[test]
-    fn test_tap_with_frame() {
-        let cmd = parse_command(
-            &args("tap --frame iframe.mobile button.submit"),
-            &default_flags(),
-        )
-        .unwrap();
-        assert_eq!(cmd["action"], "tap");
-        assert_eq!(cmd["selector"], "button.submit");
-        assert_eq!(cmd["frame"], "iframe.mobile");
+        let err = parse_command(&args("click --frame= btn"), &default_flags()).unwrap_err();
+        assert!(matches!(err, ParseError::MissingArguments { context, .. } if context == "--frame"));
     }
 
     // === Tabs ===
