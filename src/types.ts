@@ -99,6 +99,7 @@ export interface DragCommand extends BaseCommand {
   action: 'drag';
   source: string;
   target: string;
+  frame?: string;
 }
 
 export interface FrameCommand extends BaseCommand {
@@ -745,6 +746,7 @@ export interface PressCommand extends BaseCommand {
   action: 'press';
   key: string;
   selector?: string;
+  frame?: string;
 }
 
 export interface ScreenshotCommand extends BaseCommand {
@@ -769,6 +771,7 @@ export interface EvaluateCommand extends BaseCommand {
 export interface WaitCommand extends BaseCommand {
   action: 'wait';
   selector?: string;
+  frame?: string;
   timeout?: number;
   state?: 'attached' | 'detached' | 'visible' | 'hidden';
 }

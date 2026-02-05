@@ -217,7 +217,7 @@ agent-browser click --frame "iframe[title='Payment']" "button.submit"
 agent-browser fill --frame @e5 "input[name='cardnumber']" "4242..."
 ```
 
-Commands supporting `--frame`: click, dblclick, fill, type, hover, focus, check, uncheck, upload, select
+Commands supporting `--frame`: click, dblclick, fill, type, hover, focus, check, uncheck, upload, select, drag, press, wait
 
 Frame specifiers: CSS selector, `name=frameName`, or iframe ref (`@e5`)
 

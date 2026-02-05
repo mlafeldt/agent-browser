@@ -532,11 +532,11 @@ async function handleType(command: TypeCommand, browser: BrowserManager): Promis
 }
 
 async function handlePress(command: PressCommand, browser: BrowserManager): Promise<Response> {
-  const page = browser.getPage();
-
   if (command.selector) {
-    await page.press(command.selector, command.key);
+    const locator = browser.getLocator(command.selector, command.frame);
+    await locator.press(command.key);
   } else {
+    const page = browser.getPage();
     await page.keyboard.press(command.key);
   }
 
@@ -633,7 +633,8 @@ async function handleWait(command: WaitCommand, browser: BrowserManager): Promis
   const page = browser.getPage();
 
   if (command.selector) {
-    await page.waitForSelector(command.selector, {
+    const locator = browser.getLocator(command.selector, command.frame);
+    await locator.waitFor({
       state: command.state ?? 'visible',
       timeout: command.timeout,
     });
@@ -860,8 +861,15 @@ async function handleFocus(command: FocusCommand, browser: BrowserManager): Prom
 }
 
 async function handleDrag(command: DragCommand, browser: BrowserManager): Promise<Response> {
-  const frame = browser.getFrame();
-  await frame.dragAndDrop(command.source, command.target);
+  if (command.frame) {
+    // Use locators for cross-origin iframe support
+    const sourceLocator = browser.getLocator(command.source, command.frame);
+    const targetLocator = browser.getLocator(command.target, command.frame);
+    await sourceLocator.dragTo(targetLocator);
+  } else {
+    const frame = browser.getFrame();
+    await frame.dragAndDrop(command.source, command.target);
+  }
   return successResponse(command.id, { dragged: true });
 }
 

@@ -117,6 +117,7 @@ const dragSchema = baseCommandSchema.extend({
   action: z.literal('drag'),
   source: z.string().min(1),
   target: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const frameSchema = baseCommandSchema.extend({
@@ -709,6 +710,7 @@ const pressSchema = baseCommandSchema.extend({
   action: z.literal('press'),
   key: z.string().min(1),
   selector: z.string().min(1).optional(),
+  frame: z.string().optional(),
 });
 
 const screenshotSchema = baseCommandSchema.extend({
@@ -737,6 +739,7 @@ const evaluateSchema = baseCommandSchema.extend({
 const waitSchema = baseCommandSchema.extend({
   action: z.literal('wait'),
   selector: z.string().min(1).optional(),
+  frame: z.string().optional(),
   timeout: z.number().positive().optional(),
   state: z.enum(['attached', 'detached', 'visible', 'hidden']).optional(),
 });
