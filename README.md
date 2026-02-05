@@ -213,13 +213,15 @@ For cross-origin iframes, use the `--frame` flag:
 ```bash
 agent-browser fill --frame "iframe[name='stripe']" "input[name='cardnumber']" "4242..."
 agent-browser click --frame "iframe[title='Payment']" "button.submit"
+# Or use iframe ref from snapshot
+agent-browser fill --frame @e5 "input[name='cardnumber']" "4242..."
 ```
 
 Commands supporting `--frame`: click, dblclick, fill, type, hover, focus, check, uncheck, upload, select
 
-Frame specifiers: CSS selector (`iframe[name='x']`) or `name=frameName`
+Frame specifiers: CSS selector, `name=frameName`, or iframe ref (`@e5`)
 
-**Note:** Refs (@e1) not supported with `--frame`. Use CSS selectors.
+**Note:** Element refs not supported *inside* `--frame`. Use CSS selectors for elements.
 
 ### Dialogs
 

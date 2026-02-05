@@ -178,22 +178,52 @@ export class BrowserManager {
   }
 
   /**
+   * Resolve a frame specifier to a CSS selector.
+   * Supports: CSS selector, name=..., or iframe ref (@e5)
+   */
+  private resolveFrameSelector(frameSpec: string): string {
+    // Handle name= syntax
+    if (frameSpec.startsWith('name=')) {
+      return `iframe[name="${frameSpec.slice(5)}"]`;
+    }
+
+    // Handle iframe refs
+    const ref = parseRef(frameSpec);
+    if (ref) {
+      const refData = this.refMap[ref];
+      if (!refData) {
+        throw new Error(`Frame ref "${frameSpec}" not found. Run 'snapshot' first.`);
+      }
+      if (refData.role !== 'Iframe') {
+        throw new Error(`Ref "${frameSpec}" is not an iframe (role: ${refData.role}).`);
+      }
+      // Use name/title for more reliable targeting if available
+      if (refData.name) {
+        const escaped = refData.name.replace(/"/g, '\\"');
+        return `iframe[name="${escaped}"], iframe[title="${escaped}"]`;
+      }
+      return refData.selector;
+    }
+
+    // Plain CSS selector
+    return frameSpec;
+  }
+
+  /**
    * Get locator - supports both refs and regular selectors
    * @param selectorOrRef - Selector string or ref (e.g., "@e1")
-   * @param frameSpec - Optional frame specifier for --frame flag (selector or name=...)
+   * @param frameSpec - Optional frame specifier for --frame flag (selector, name=..., or @ref)
    */
   getLocator(selectorOrRef: string, frameSpec?: string): Locator {
     // If --frame provided, use frameLocator for cross-origin iframe support
     if (frameSpec) {
-      // Refs not supported with --frame
+      // Element refs not supported with --frame (iframe refs are handled separately)
       if (parseRef(selectorOrRef)) {
         throw new Error('Refs (@e1) not supported with --frame. Use CSS selector.');
       }
       const page = this.getPage();
-      const frameLocator = frameSpec.startsWith('name=')
-        ? page.frameLocator(`iframe[name="${frameSpec.slice(5)}"]`)
-        : page.frameLocator(frameSpec);
-      return frameLocator.locator(selectorOrRef);
+      const frameSelector = this.resolveFrameSelector(frameSpec);
+      return page.frameLocator(frameSelector).locator(selectorOrRef);
     }
 
     // Check if it's a ref first
