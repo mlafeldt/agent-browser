@@ -360,11 +360,16 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
             Ok(json!({ "id": id, "action": "scroll", "direction": dir, "amount": amount }))
         }
         "scrollintoview" | "scrollinto" => {
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "scrollintoview".to_string(),
-                usage: "scrollintoview <selector>",
+                usage: "scrollintoview [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "scrollintoview", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "scrollintoview", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
 
         // === Wait ===
@@ -932,11 +937,16 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
             Ok(json!({ "id": id, "action": "errors", "clear": clear }))
         }
         "highlight" => {
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "highlight".to_string(),
-                usage: "highlight <selector>",
+                usage: "highlight [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "highlight", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "highlight", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
 
         // === State ===
@@ -971,11 +981,16 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
         // === iOS-specific commands ===
         "tap" => {
             // Alias for click (semantic clarity for touch interfaces)
+            let (frame, rest) = extract_frame_flag(&rest)?;
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "tap".to_string(),
-                usage: "tap <selector>",
+                usage: "tap [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "tap", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "tap", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         "swipe" => {
             let direction = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
@@ -1023,61 +1038,94 @@ fn parse_get(rest: &[&str], id: &str) -> Result<Value, ParseError> {
         "text", "html", "value", "attr", "url", "title", "count", "box", "styles",
     ];
 
-    match rest.get(0).map(|s| *s) {
+    // Extract subcommand first, then process remaining args for --frame
+    let subcommand = rest.get(0).map(|s| *s);
+    let sub_rest: Vec<&str> = rest.iter().skip(1).cloned().collect();
+    let (frame, args) = extract_frame_flag(&sub_rest)?;
+
+    match subcommand {
         Some("text") => {
-            let sel = rest.get(1).ok_or_else(|| ParseError::MissingArguments {
+            let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "get text".to_string(),
-                usage: "get text <selector>",
+                usage: "get text [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "gettext", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "gettext", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         Some("html") => {
-            let sel = rest.get(1).ok_or_else(|| ParseError::MissingArguments {
+            let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "get html".to_string(),
-                usage: "get html <selector>",
+                usage: "get html [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "innerhtml", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "innerhtml", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         Some("value") => {
-            let sel = rest.get(1).ok_or_else(|| ParseError::MissingArguments {
+            let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "get value".to_string(),
-                usage: "get value <selector>",
+                usage: "get value [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "inputvalue", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "inputvalue", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         Some("attr") => {
-            let sel = rest.get(1).ok_or_else(|| ParseError::MissingArguments {
+            let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "get attr".to_string(),
-                usage: "get attr <selector> <attribute>",
+                usage: "get attr [--frame <frame>] <selector> <attribute>",
             })?;
-            let attr = rest.get(2).ok_or_else(|| ParseError::MissingArguments {
+            let attr = args.get(1).ok_or_else(|| ParseError::MissingArguments {
                 context: "get attr".to_string(),
-                usage: "get attr <selector> <attribute>",
+                usage: "get attr [--frame <frame>] <selector> <attribute>",
             })?;
-            Ok(json!({ "id": id, "action": "getattribute", "selector": sel, "attribute": attr }))
+            let mut cmd = json!({ "id": id, "action": "getattribute", "selector": sel, "attribute": attr });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         Some("url") => Ok(json!({ "id": id, "action": "url" })),
         Some("title") => Ok(json!({ "id": id, "action": "title" })),
         Some("count") => {
-            let sel = rest.get(1).ok_or_else(|| ParseError::MissingArguments {
+            let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "get count".to_string(),
-                usage: "get count <selector>",
+                usage: "get count [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "count", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "count", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         Some("box") => {
-            let sel = rest.get(1).ok_or_else(|| ParseError::MissingArguments {
+            let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "get box".to_string(),
-                usage: "get box <selector>",
+                usage: "get box [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "boundingbox", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "boundingbox", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         Some("styles") => {
-            let sel = rest.get(1).ok_or_else(|| ParseError::MissingArguments {
+            let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "get styles".to_string(),
-                usage: "get styles <selector>",
+                usage: "get styles [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "styles", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "styles", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         Some(sub) => Err(ParseError::UnknownSubcommand {
             subcommand: sub.to_string(),
@@ -1093,27 +1141,44 @@ fn parse_get(rest: &[&str], id: &str) -> Result<Value, ParseError> {
 fn parse_is(rest: &[&str], id: &str) -> Result<Value, ParseError> {
     const VALID: &[&str] = &["visible", "enabled", "checked"];
 
-    match rest.get(0).map(|s| *s) {
+    // Extract subcommand first, then process remaining args for --frame
+    let subcommand = rest.get(0).map(|s| *s);
+    let sub_rest: Vec<&str> = rest.iter().skip(1).cloned().collect();
+    let (frame, args) = extract_frame_flag(&sub_rest)?;
+
+    match subcommand {
         Some("visible") => {
-            let sel = rest.get(1).ok_or_else(|| ParseError::MissingArguments {
+            let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "is visible".to_string(),
-                usage: "is visible <selector>",
+                usage: "is visible [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "isvisible", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "isvisible", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         Some("enabled") => {
-            let sel = rest.get(1).ok_or_else(|| ParseError::MissingArguments {
+            let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "is enabled".to_string(),
-                usage: "is enabled <selector>",
+                usage: "is enabled [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "isenabled", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "isenabled", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         Some("checked") => {
-            let sel = rest.get(1).ok_or_else(|| ParseError::MissingArguments {
+            let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "is checked".to_string(),
-                usage: "is checked <selector>",
+                usage: "is checked [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "ischecked", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "ischecked", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         Some(sub) => Err(ParseError::UnknownSubcommand {
             subcommand: sub.to_string(),
@@ -2161,6 +2226,103 @@ mod tests {
             }
             _ => panic!("Expected MissingArguments error"),
         }
+    }
+
+    #[test]
+    fn test_get_text_with_frame() {
+        let cmd = parse_command(
+            &args("get text --frame iframe.content .title"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "gettext");
+        assert_eq!(cmd["selector"], ".title");
+        assert_eq!(cmd["frame"], "iframe.content");
+    }
+
+    #[test]
+    fn test_get_attr_with_frame() {
+        let cmd = parse_command(
+            &args("get attr --frame @e5 input placeholder"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "getattribute");
+        assert_eq!(cmd["selector"], "input");
+        assert_eq!(cmd["attribute"], "placeholder");
+        assert_eq!(cmd["frame"], "@e5");
+    }
+
+    #[test]
+    fn test_get_count_with_frame() {
+        let cmd = parse_command(
+            &args("get count --frame iframe.list li"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "count");
+        assert_eq!(cmd["selector"], "li");
+        assert_eq!(cmd["frame"], "iframe.list");
+    }
+
+    #[test]
+    fn test_is_visible_with_frame() {
+        let cmd = parse_command(
+            &args("is visible --frame iframe.modal .dialog"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "isvisible");
+        assert_eq!(cmd["selector"], ".dialog");
+        assert_eq!(cmd["frame"], "iframe.modal");
+    }
+
+    #[test]
+    fn test_is_checked_with_frame() {
+        let cmd = parse_command(
+            &args("is checked --frame name=form_frame input[type='checkbox']"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "ischecked");
+        assert_eq!(cmd["selector"], "input[type='checkbox']");
+        assert_eq!(cmd["frame"], "name=form_frame");
+    }
+
+    #[test]
+    fn test_scrollintoview_with_frame() {
+        let cmd = parse_command(
+            &args("scrollintoview --frame iframe.scroll .footer"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "scrollintoview");
+        assert_eq!(cmd["selector"], ".footer");
+        assert_eq!(cmd["frame"], "iframe.scroll");
+    }
+
+    #[test]
+    fn test_highlight_with_frame() {
+        let cmd = parse_command(
+            &args("highlight --frame iframe.debug .element"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "highlight");
+        assert_eq!(cmd["selector"], ".element");
+        assert_eq!(cmd["frame"], "iframe.debug");
+    }
+
+    #[test]
+    fn test_tap_with_frame() {
+        let cmd = parse_command(
+            &args("tap --frame iframe.mobile button.submit"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "tap");
+        assert_eq!(cmd["selector"], "button.submit");
+        assert_eq!(cmd["frame"], "iframe.mobile");
     }
 
     // === Tabs ===
