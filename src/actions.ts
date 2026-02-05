@@ -664,15 +664,19 @@ async function handleScroll(command: ScrollCommand, browser: BrowserManager): Pr
 
   if (command.selector) {
     const locator = browser.getLocator(command.selector, command.frame);
-    await locator.scrollIntoViewIfNeeded();
+    try {
+      await locator.scrollIntoViewIfNeeded();
 
-    if (command.x !== undefined || command.y !== undefined) {
-      await locator.evaluate(
-        (el, { x, y }) => {
-          el.scrollBy(x ?? 0, y ?? 0);
-        },
-        { x: command.x, y: command.y }
-      );
+      if (command.x !== undefined || command.y !== undefined) {
+        await locator.evaluate(
+          (el, { x, y }) => {
+            el.scrollBy(x ?? 0, y ?? 0);
+          },
+          { x: command.x, y: command.y }
+        );
+      }
+    } catch (error) {
+      throw toAIFriendlyError(error, command.selector);
     }
   } else {
     // Scroll the page
@@ -1264,14 +1268,22 @@ async function handleGetAttribute(
   browser: BrowserManager
 ): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  const value = await locator.getAttribute(command.attribute);
-  return successResponse(command.id, { attribute: command.attribute, value });
+  try {
+    const value = await locator.getAttribute(command.attribute);
+    return successResponse(command.id, { attribute: command.attribute, value });
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
 }
 
 async function handleGetText(command: GetTextCommand, browser: BrowserManager): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  const text = await locator.textContent();
-  return successResponse(command.id, { text });
+  try {
+    const text = await locator.textContent();
+    return successResponse(command.id, { text });
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
 }
 
 async function handleIsVisible(
@@ -1279,8 +1291,12 @@ async function handleIsVisible(
   browser: BrowserManager
 ): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  const visible = await locator.isVisible();
-  return successResponse(command.id, { visible });
+  try {
+    const visible = await locator.isVisible();
+    return successResponse(command.id, { visible });
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
 }
 
 async function handleIsEnabled(
@@ -1288,8 +1304,12 @@ async function handleIsEnabled(
   browser: BrowserManager
 ): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  const enabled = await locator.isEnabled();
-  return successResponse(command.id, { enabled });
+  try {
+    const enabled = await locator.isEnabled();
+    return successResponse(command.id, { enabled });
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
 }
 
 async function handleIsChecked(
@@ -1297,14 +1317,22 @@ async function handleIsChecked(
   browser: BrowserManager
 ): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  const checked = await locator.isChecked();
-  return successResponse(command.id, { checked });
+  try {
+    const checked = await locator.isChecked();
+    return successResponse(command.id, { checked });
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
 }
 
 async function handleCount(command: CountCommand, browser: BrowserManager): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  const count = await locator.count();
-  return successResponse(command.id, { count });
+  try {
+    const count = await locator.count();
+    return successResponse(command.id, { count });
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
 }
 
 async function handleBoundingBox(
@@ -1312,8 +1340,12 @@ async function handleBoundingBox(
   browser: BrowserManager
 ): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  const box = await locator.boundingBox();
-  return successResponse(command.id, { box });
+  try {
+    const box = await locator.boundingBox();
+    return successResponse(command.id, { box });
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
 }
 
 async function handleStyles(
@@ -1347,24 +1379,28 @@ async function handleStyles(
     };
   })`;
 
-  // Check if it's a ref - single element
-  if (browser.isRef(command.selector)) {
+  try {
+    // Check if it's a ref - single element
+    if (browser.isRef(command.selector)) {
+      const locator = browser.getLocator(command.selector, command.frame);
+      const element = (await locator.evaluate((el, script) => {
+        const fn = eval(script);
+        return fn(el);
+      }, extractStylesScript)) as StylesData['elements'][0];
+      return successResponse(command.id, { elements: [element] });
+    }
+
+    // CSS selector - can match multiple elements (use locator.evaluateAll for frame support)
     const locator = browser.getLocator(command.selector, command.frame);
-    const element = (await locator.evaluate((el, script) => {
+    const elements = (await locator.evaluateAll((els, script) => {
       const fn = eval(script);
-      return fn(el);
-    }, extractStylesScript)) as StylesData['elements'][0];
-    return successResponse(command.id, { elements: [element] });
+      return els.map((el) => fn(el));
+    }, extractStylesScript)) as StylesData['elements'];
+
+    return successResponse(command.id, { elements });
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
   }
-
-  // CSS selector - can match multiple elements (use locator.evaluateAll for frame support)
-  const locator = browser.getLocator(command.selector, command.frame);
-  const elements = (await locator.evaluateAll((els, script) => {
-    const fn = eval(script);
-    return els.map((el) => fn(el));
-  }, extractStylesScript)) as StylesData['elements'];
-
-  return successResponse(command.id, { elements });
 }
 
 // Advanced handlers
@@ -1494,7 +1530,11 @@ async function handleWheel(command: WheelCommand, browser: BrowserManager): Prom
 
 async function handleTap(command: TapCommand, browser: BrowserManager): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  await locator.tap();
+  try {
+    await locator.tap();
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
   return successResponse(command.id, { tapped: true });
 }
 
@@ -1524,13 +1564,21 @@ async function handleHighlight(
   browser: BrowserManager
 ): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  await locator.highlight();
+  try {
+    await locator.highlight();
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
   return successResponse(command.id, { highlighted: true });
 }
 
 async function handleClear(command: ClearCommand, browser: BrowserManager): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  await locator.clear();
+  try {
+    await locator.clear();
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
   return successResponse(command.id, { cleared: true });
 }
 
@@ -1539,7 +1587,11 @@ async function handleSelectAll(
   browser: BrowserManager
 ): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  await locator.selectText();
+  try {
+    await locator.selectText();
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
   return successResponse(command.id, { selected: true });
 }
 
@@ -1548,8 +1600,12 @@ async function handleInnerText(
   browser: BrowserManager
 ): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  const text = await locator.innerText();
-  return successResponse(command.id, { text });
+  try {
+    const text = await locator.innerText();
+    return successResponse(command.id, { text });
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
 }
 
 async function handleInnerHtml(
@@ -1557,8 +1613,12 @@ async function handleInnerHtml(
   browser: BrowserManager
 ): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  const html = await locator.innerHTML();
-  return successResponse(command.id, { html });
+  try {
+    const html = await locator.innerHTML();
+    return successResponse(command.id, { html });
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
 }
 
 async function handleInputValue(
@@ -1566,8 +1626,12 @@ async function handleInputValue(
   browser: BrowserManager
 ): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  const value = await locator.inputValue();
-  return successResponse(command.id, { value });
+  try {
+    const value = await locator.inputValue();
+    return successResponse(command.id, { value });
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
 }
 
 async function handleSetValue(
@@ -1575,7 +1639,11 @@ async function handleSetValue(
   browser: BrowserManager
 ): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  await locator.fill(command.value);
+  try {
+    await locator.fill(command.value);
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
   return successResponse(command.id, { set: true });
 }
 
@@ -1584,7 +1652,11 @@ async function handleDispatch(
   browser: BrowserManager
 ): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  await locator.dispatchEvent(command.event, command.eventInit);
+  try {
+    await locator.dispatchEvent(command.event, command.eventInit);
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
   return successResponse(command.id, { dispatched: command.event });
 }
 
@@ -1862,7 +1934,11 @@ async function handleScrollIntoView(
   browser: BrowserManager
 ): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  await locator.scrollIntoViewIfNeeded();
+  try {
+    await locator.scrollIntoViewIfNeeded();
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
   return successResponse(command.id, { scrolled: true });
 }
 
@@ -1901,8 +1977,12 @@ async function handleMultiSelect(
   browser: BrowserManager
 ): Promise<Response> {
   const locator = browser.getLocator(command.selector, command.frame);
-  const selected = await locator.selectOption(command.values);
-  return successResponse(command.id, { selected });
+  try {
+    const selected = await locator.selectOption(command.values);
+    return successResponse(command.id, { selected });
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
 }
 
 async function handleWaitForDownload(
