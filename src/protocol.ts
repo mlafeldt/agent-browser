@@ -302,41 +302,49 @@ const getAttributeSchema = baseCommandSchema.extend({
   action: z.literal('getattribute'),
   selector: z.string().min(1),
   attribute: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const getTextSchema = baseCommandSchema.extend({
   action: z.literal('gettext'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const isVisibleSchema = baseCommandSchema.extend({
   action: z.literal('isvisible'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const isEnabledSchema = baseCommandSchema.extend({
   action: z.literal('isenabled'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const isCheckedSchema = baseCommandSchema.extend({
   action: z.literal('ischecked'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const countSchema = baseCommandSchema.extend({
   action: z.literal('count'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const boundingBoxSchema = baseCommandSchema.extend({
   action: z.literal('boundingbox'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const stylesSchema = baseCommandSchema.extend({
   action: z.literal('styles'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const videoStartSchema = baseCommandSchema.extend({
@@ -420,6 +428,7 @@ const wheelSchema = baseCommandSchema.extend({
 const tapSchema = baseCommandSchema.extend({
   action: z.literal('tap'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const clipboardSchema = baseCommandSchema.extend({
@@ -431,37 +440,44 @@ const clipboardSchema = baseCommandSchema.extend({
 const highlightSchema = baseCommandSchema.extend({
   action: z.literal('highlight'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const clearSchema = baseCommandSchema.extend({
   action: z.literal('clear'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const selectAllSchema = baseCommandSchema.extend({
   action: z.literal('selectall'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const innerTextSchema = baseCommandSchema.extend({
   action: z.literal('innertext'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const innerHtmlSchema = baseCommandSchema.extend({
   action: z.literal('innerhtml'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const inputValueSchema = baseCommandSchema.extend({
   action: z.literal('inputvalue'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const setValueSchema = baseCommandSchema.extend({
   action: z.literal('setvalue'),
   selector: z.string().min(1),
   value: z.string(),
+  frame: z.string().optional(),
 });
 
 const dispatchSchema = baseCommandSchema.extend({
@@ -469,6 +485,7 @@ const dispatchSchema = baseCommandSchema.extend({
   selector: z.string().min(1),
   event: z.string().min(1),
   eventInit: z.record(z.unknown()).optional(),
+  frame: z.string().optional(),
 });
 
 const evalHandleSchema = baseCommandSchema.extend({
@@ -606,6 +623,7 @@ const waitForFunctionSchema = baseCommandSchema.extend({
 const scrollIntoViewSchema = baseCommandSchema.extend({
   action: z.literal('scrollintoview'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const addInitScriptSchema = baseCommandSchema.extend({
@@ -632,6 +650,7 @@ const multiSelectSchema = baseCommandSchema.extend({
   action: z.literal('multiselect'),
   selector: z.string().min(1),
   values: z.array(z.string()),
+  frame: z.string().optional(),
 });
 
 const waitForDownloadSchema = baseCommandSchema.extend({
@@ -751,6 +770,7 @@ const scrollSchema = baseCommandSchema.extend({
   y: z.number().optional(),
   direction: z.enum(['up', 'down', 'left', 'right']).optional(),
   amount: z.number().positive().optional(),
+  frame: z.string().optional(),
 });
 
 const selectSchema = baseCommandSchema.extend({

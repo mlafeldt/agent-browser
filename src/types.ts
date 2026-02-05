@@ -300,43 +300,51 @@ export interface GetAttributeCommand extends BaseCommand {
   action: 'getattribute';
   selector: string;
   attribute: string;
+  frame?: string;
 }
 
 export interface GetTextCommand extends BaseCommand {
   action: 'gettext';
   selector: string;
+  frame?: string;
 }
 
 export interface IsVisibleCommand extends BaseCommand {
   action: 'isvisible';
   selector: string;
+  frame?: string;
 }
 
 export interface IsEnabledCommand extends BaseCommand {
   action: 'isenabled';
   selector: string;
+  frame?: string;
 }
 
 export interface IsCheckedCommand extends BaseCommand {
   action: 'ischecked';
   selector: string;
+  frame?: string;
 }
 
 export interface CountCommand extends BaseCommand {
   action: 'count';
   selector: string;
+  frame?: string;
 }
 
 // Bounding box
 export interface BoundingBoxCommand extends BaseCommand {
   action: 'boundingbox';
   selector: string;
+  frame?: string;
 }
 
 // Computed styles
 export interface StylesCommand extends BaseCommand {
   action: 'styles';
   selector: string;
+  frame?: string;
 }
 
 // More semantic locators
@@ -442,6 +450,7 @@ export interface WaitForFunctionCommand extends BaseCommand {
 export interface ScrollIntoViewCommand extends BaseCommand {
   action: 'scrollintoview';
   selector: string;
+  frame?: string;
 }
 
 // Add init script (runs on every navigation)
@@ -472,6 +481,7 @@ export interface MultiSelectCommand extends BaseCommand {
   action: 'multiselect';
   selector: string;
   values: string[];
+  frame?: string;
 }
 
 // Wait for download
@@ -632,6 +642,7 @@ export interface WheelCommand extends BaseCommand {
 export interface TapCommand extends BaseCommand {
   action: 'tap';
   selector: string;
+  frame?: string;
 }
 
 // Clipboard
@@ -645,35 +656,41 @@ export interface ClipboardCommand extends BaseCommand {
 export interface HighlightCommand extends BaseCommand {
   action: 'highlight';
   selector: string;
+  frame?: string;
 }
 
 // Clear input
 export interface ClearCommand extends BaseCommand {
   action: 'clear';
   selector: string;
+  frame?: string;
 }
 
 // Select all text
 export interface SelectAllCommand extends BaseCommand {
   action: 'selectall';
   selector: string;
+  frame?: string;
 }
 
 // Inner text vs text content
 export interface InnerTextCommand extends BaseCommand {
   action: 'innertext';
   selector: string;
+  frame?: string;
 }
 
 export interface InnerHtmlCommand extends BaseCommand {
   action: 'innerhtml';
   selector: string;
+  frame?: string;
 }
 
 // Input value
 export interface InputValueCommand extends BaseCommand {
   action: 'inputvalue';
   selector: string;
+  frame?: string;
 }
 
 // Set input value directly (without events)
@@ -681,6 +698,7 @@ export interface SetValueCommand extends BaseCommand {
   action: 'setvalue';
   selector: string;
   value: string;
+  frame?: string;
 }
 
 // Dispatch event
@@ -689,6 +707,7 @@ export interface DispatchEventCommand extends BaseCommand {
   selector: string;
   event: string;
   eventInit?: Record<string, unknown>;
+  frame?: string;
 }
 
 // Evaluate handle (for complex JS)
@@ -783,6 +802,7 @@ export interface ScrollCommand extends BaseCommand {
   y?: number;
   direction?: 'up' | 'down' | 'left' | 'right';
   amount?: number;
+  frame?: string;
 }
 
 export interface SelectCommand extends BaseCommand {
