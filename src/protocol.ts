@@ -63,6 +63,7 @@ const clickSchema = baseCommandSchema.extend({
   button: z.enum(['left', 'right', 'middle']).optional(),
   clickCount: z.number().positive().optional(),
   delay: z.number().nonnegative().optional(),
+  frame: z.string().optional(),
 });
 
 const typeSchema = baseCommandSchema.extend({
@@ -71,38 +72,45 @@ const typeSchema = baseCommandSchema.extend({
   text: z.string(),
   delay: z.number().nonnegative().optional(),
   clear: z.boolean().optional(),
+  frame: z.string().optional(),
 });
 
 const fillSchema = baseCommandSchema.extend({
   action: z.literal('fill'),
   selector: z.string().min(1),
   value: z.string(),
+  frame: z.string().optional(),
 });
 
 const checkSchema = baseCommandSchema.extend({
   action: z.literal('check'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const uncheckSchema = baseCommandSchema.extend({
   action: z.literal('uncheck'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const uploadSchema = baseCommandSchema.extend({
   action: z.literal('upload'),
   selector: z.string().min(1),
   files: z.union([z.string(), z.array(z.string())]),
+  frame: z.string().optional(),
 });
 
 const dblclickSchema = baseCommandSchema.extend({
   action: z.literal('dblclick'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const focusSchema = baseCommandSchema.extend({
   action: z.literal('focus'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const dragSchema = baseCommandSchema.extend({
@@ -746,11 +754,13 @@ const selectSchema = baseCommandSchema.extend({
   action: z.literal('select'),
   selector: z.string().min(1),
   values: z.union([z.string(), z.array(z.string())]),
+  frame: z.string().optional(),
 });
 
 const hoverSchema = baseCommandSchema.extend({
   action: z.literal('hover'),
   selector: z.string().min(1),
+  frame: z.string().optional(),
 });
 
 const contentSchema = baseCommandSchema.extend({

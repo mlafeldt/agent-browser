@@ -58,11 +58,11 @@ agent-browser find role button click --name "Submit"
 
 ```bash
 agent-browser open <url>              # Navigate to URL (aliases: goto, navigate)
-agent-browser click <sel>             # Click element
-agent-browser dblclick <sel>          # Double-click element
-agent-browser focus <sel>             # Focus element
-agent-browser type <sel> <text>       # Type into element
-agent-browser fill <sel> <text>       # Clear and fill
+agent-browser click <sel>             # Click element (--frame for iframes)
+agent-browser dblclick <sel>          # Double-click element (--frame for iframes)
+agent-browser focus <sel>             # Focus element (--frame for iframes)
+agent-browser type <sel> <text>       # Type into element (--frame for iframes)
+agent-browser fill <sel> <text>       # Clear and fill (--frame for iframes)
 agent-browser press <key>             # Press key (Enter, Tab, Control+a) (alias: key)
 agent-browser keydown <key>           # Hold key down
 agent-browser keyup <key>             # Release key
@@ -202,9 +202,24 @@ agent-browser window new              # New window
 ### Frames
 
 ```bash
-agent-browser frame <sel>             # Switch to iframe
+agent-browser frame <sel>             # Switch to iframe (same-origin only)
 agent-browser frame main              # Back to main frame
 ```
+
+#### Cross-Origin Iframes (Stripe, Polar, etc.)
+
+For cross-origin iframes, use the `--frame` flag:
+
+```bash
+agent-browser fill --frame "iframe[name='stripe']" "input[name='cardnumber']" "4242..."
+agent-browser click --frame "iframe[title='Payment']" "button.submit"
+```
+
+Commands supporting `--frame`: click, dblclick, fill, type, hover, focus, check, uncheck, upload, select
+
+Frame specifiers: CSS selector (`iframe[name='x']`) or `name=frameName`
+
+**Note:** Refs (@e1) not supported with `--frame`. Use CSS selectors.
 
 ### Dialogs
 

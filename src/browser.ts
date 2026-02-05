@@ -179,8 +179,23 @@ export class BrowserManager {
 
   /**
    * Get locator - supports both refs and regular selectors
+   * @param selectorOrRef - Selector string or ref (e.g., "@e1")
+   * @param frameSpec - Optional frame specifier for --frame flag (selector or name=...)
    */
-  getLocator(selectorOrRef: string): Locator {
+  getLocator(selectorOrRef: string, frameSpec?: string): Locator {
+    // If --frame provided, use frameLocator for cross-origin iframe support
+    if (frameSpec) {
+      // Refs not supported with --frame
+      if (parseRef(selectorOrRef)) {
+        throw new Error('Refs (@e1) not supported with --frame. Use CSS selector.');
+      }
+      const page = this.getPage();
+      const frameLocator = frameSpec.startsWith('name=')
+        ? page.frameLocator(`iframe[name="${frameSpec.slice(5)}"]`)
+        : page.frameLocator(frameSpec);
+      return frameLocator.locator(selectorOrRef);
+    }
+
     // Check if it's a ref first
     const locator = this.getLocatorFromRef(selectorOrRef);
     if (locator) return locator;

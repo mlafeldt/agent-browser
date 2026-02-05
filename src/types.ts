@@ -45,6 +45,7 @@ export interface ClickCommand extends BaseCommand {
   button?: 'left' | 'right' | 'middle';
   clickCount?: number;
   delay?: number;
+  frame?: string;
 }
 
 export interface TypeCommand extends BaseCommand {
@@ -53,38 +54,45 @@ export interface TypeCommand extends BaseCommand {
   text: string;
   delay?: number;
   clear?: boolean;
+  frame?: string;
 }
 
 export interface FillCommand extends BaseCommand {
   action: 'fill';
   selector: string;
   value: string;
+  frame?: string;
 }
 
 export interface CheckCommand extends BaseCommand {
   action: 'check';
   selector: string;
+  frame?: string;
 }
 
 export interface UncheckCommand extends BaseCommand {
   action: 'uncheck';
   selector: string;
+  frame?: string;
 }
 
 export interface UploadCommand extends BaseCommand {
   action: 'upload';
   selector: string;
   files: string | string[];
+  frame?: string;
 }
 
 export interface DoubleClickCommand extends BaseCommand {
   action: 'dblclick';
   selector: string;
+  frame?: string;
 }
 
 export interface FocusCommand extends BaseCommand {
   action: 'focus';
   selector: string;
+  frame?: string;
 }
 
 export interface DragCommand extends BaseCommand {
@@ -778,11 +786,13 @@ export interface SelectCommand extends BaseCommand {
   action: 'select';
   selector: string;
   values: string | string[];
+  frame?: string;
 }
 
 export interface HoverCommand extends BaseCommand {
   action: 'hover';
   selector: string;
+  frame?: string;
 }
 
 export interface ContentCommand extends BaseCommand {

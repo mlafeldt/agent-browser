@@ -497,8 +497,8 @@ async function handleNavigate(
 }
 
 async function handleClick(command: ClickCommand, browser: BrowserManager): Promise<Response> {
-  // Support both refs (@e1) and regular selectors
-  const locator = browser.getLocator(command.selector);
+  // Support both refs (@e1) and regular selectors, with optional --frame
+  const locator = browser.getLocator(command.selector, command.frame);
 
   try {
     await locator.click({
@@ -514,7 +514,7 @@ async function handleClick(command: ClickCommand, browser: BrowserManager): Prom
 }
 
 async function handleType(command: TypeCommand, browser: BrowserManager): Promise<Response> {
-  const locator = browser.getLocator(command.selector);
+  const locator = browser.getLocator(command.selector, command.frame);
 
   try {
     if (command.clear) {
@@ -692,7 +692,7 @@ async function handleScroll(command: ScrollCommand, browser: BrowserManager): Pr
 }
 
 async function handleSelect(command: SelectCommand, browser: BrowserManager): Promise<Response> {
-  const locator = browser.getLocator(command.selector);
+  const locator = browser.getLocator(command.selector, command.frame);
   const values = Array.isArray(command.values) ? command.values : [command.values];
 
   try {
@@ -705,7 +705,7 @@ async function handleSelect(command: SelectCommand, browser: BrowserManager): Pr
 }
 
 async function handleHover(command: HoverCommand, browser: BrowserManager): Promise<Response> {
-  const locator = browser.getLocator(command.selector);
+  const locator = browser.getLocator(command.selector, command.frame);
   try {
     await locator.hover();
   } catch (error) {
@@ -796,7 +796,7 @@ async function handleWindowNew(
 // New handlers for enhanced Playwright parity
 
 async function handleFill(command: FillCommand, browser: BrowserManager): Promise<Response> {
-  const locator = browser.getLocator(command.selector);
+  const locator = browser.getLocator(command.selector, command.frame);
   try {
     await locator.fill(command.value);
   } catch (error) {
@@ -806,7 +806,7 @@ async function handleFill(command: FillCommand, browser: BrowserManager): Promis
 }
 
 async function handleCheck(command: CheckCommand, browser: BrowserManager): Promise<Response> {
-  const locator = browser.getLocator(command.selector);
+  const locator = browser.getLocator(command.selector, command.frame);
   try {
     await locator.check();
   } catch (error) {
@@ -816,7 +816,7 @@ async function handleCheck(command: CheckCommand, browser: BrowserManager): Prom
 }
 
 async function handleUncheck(command: UncheckCommand, browser: BrowserManager): Promise<Response> {
-  const locator = browser.getLocator(command.selector);
+  const locator = browser.getLocator(command.selector, command.frame);
   try {
     await locator.uncheck();
   } catch (error) {
@@ -826,7 +826,7 @@ async function handleUncheck(command: UncheckCommand, browser: BrowserManager): 
 }
 
 async function handleUpload(command: UploadCommand, browser: BrowserManager): Promise<Response> {
-  const locator = browser.getLocator(command.selector);
+  const locator = browser.getLocator(command.selector, command.frame);
   const files = Array.isArray(command.files) ? command.files : [command.files];
   try {
     await locator.setInputFiles(files);
@@ -840,7 +840,7 @@ async function handleDoubleClick(
   command: DoubleClickCommand,
   browser: BrowserManager
 ): Promise<Response> {
-  const locator = browser.getLocator(command.selector);
+  const locator = browser.getLocator(command.selector, command.frame);
   try {
     await locator.dblclick();
   } catch (error) {
@@ -850,7 +850,7 @@ async function handleDoubleClick(
 }
 
 async function handleFocus(command: FocusCommand, browser: BrowserManager): Promise<Response> {
-  const locator = browser.getLocator(command.selector);
+  const locator = browser.getLocator(command.selector, command.frame);
   try {
     await locator.focus();
   } catch (error) {

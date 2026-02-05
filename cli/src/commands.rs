@@ -4,6 +4,22 @@ use std::io::{self, BufRead};
 
 use crate::flags::Flags;
 
+/// Extract --frame flag from args, returning (frame_selector, remaining_args)
+fn extract_frame_flag<'a>(args: &[&'a str]) -> (Option<&'a str>, Vec<&'a str>) {
+    if let Some(idx) = args.iter().position(|&s| s == "--frame") {
+        let frame = args.get(idx + 1).copied();
+        let rest: Vec<_> = args
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| *i != idx && *i != idx + 1)
+            .map(|(_, s)| *s)
+            .collect();
+        (frame, rest)
+    } else {
+        (None, args.to_vec())
+    }
+}
+
 /// Error type for command parsing with contextual information
 #[derive(Debug)]
 pub enum ParseError {
@@ -117,76 +133,121 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
 
         // === Core Actions ===
         "click" => {
+            let (frame, rest) = extract_frame_flag(&rest);
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "click".to_string(),
-                usage: "click <selector>",
+                usage: "click [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "click", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "click", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         "dblclick" => {
+            let (frame, rest) = extract_frame_flag(&rest);
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "dblclick".to_string(),
-                usage: "dblclick <selector>",
+                usage: "dblclick [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "dblclick", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "dblclick", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         "fill" => {
+            let (frame, rest) = extract_frame_flag(&rest);
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "fill".to_string(),
-                usage: "fill <selector> <text>",
+                usage: "fill [--frame <frame>] <selector> <text>",
             })?;
-            Ok(json!({ "id": id, "action": "fill", "selector": sel, "value": rest[1..].join(" ") }))
+            let mut cmd = json!({ "id": id, "action": "fill", "selector": sel, "value": rest[1..].join(" ") });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         "type" => {
+            let (frame, rest) = extract_frame_flag(&rest);
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "type".to_string(),
-                usage: "type <selector> <text>",
+                usage: "type [--frame <frame>] <selector> <text>",
             })?;
-            Ok(json!({ "id": id, "action": "type", "selector": sel, "text": rest[1..].join(" ") }))
+            let mut cmd = json!({ "id": id, "action": "type", "selector": sel, "text": rest[1..].join(" ") });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         "hover" => {
+            let (frame, rest) = extract_frame_flag(&rest);
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "hover".to_string(),
-                usage: "hover <selector>",
+                usage: "hover [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "hover", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "hover", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         "focus" => {
+            let (frame, rest) = extract_frame_flag(&rest);
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "focus".to_string(),
-                usage: "focus <selector>",
+                usage: "focus [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "focus", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "focus", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         "check" => {
+            let (frame, rest) = extract_frame_flag(&rest);
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "check".to_string(),
-                usage: "check <selector>",
+                usage: "check [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "check", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "check", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         "uncheck" => {
+            let (frame, rest) = extract_frame_flag(&rest);
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "uncheck".to_string(),
-                usage: "uncheck <selector>",
+                usage: "uncheck [--frame <frame>] <selector>",
             })?;
-            Ok(json!({ "id": id, "action": "uncheck", "selector": sel }))
+            let mut cmd = json!({ "id": id, "action": "uncheck", "selector": sel });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         "select" => {
+            let (frame, rest) = extract_frame_flag(&rest);
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "select".to_string(),
-                usage: "select <selector> <value...>",
+                usage: "select [--frame <frame>] <selector> <value...>",
             })?;
             let _val = rest.get(1).ok_or_else(|| ParseError::MissingArguments {
                 context: "select".to_string(),
-                usage: "select <selector> <value...>",
+                usage: "select [--frame <frame>] <selector> <value...>",
             })?;
             let values = &rest[1..];
-            if values.len() == 1 {
-                Ok(json!({ "id": id, "action": "select", "selector": sel, "values": values[0] }))
+            let mut cmd = if values.len() == 1 {
+                json!({ "id": id, "action": "select", "selector": sel, "values": values[0] })
             } else {
-                Ok(json!({ "id": id, "action": "select", "selector": sel, "values": values }))
+                json!({ "id": id, "action": "select", "selector": sel, "values": values })
+            };
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
             }
+            Ok(cmd)
         }
         "drag" => {
             let src = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
@@ -200,11 +261,16 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
             Ok(json!({ "id": id, "action": "drag", "source": src, "target": tgt }))
         }
         "upload" => {
+            let (frame, rest) = extract_frame_flag(&rest);
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "upload".to_string(),
-                usage: "upload <selector> <files...>",
+                usage: "upload [--frame <frame>] <selector> <files...>",
             })?;
-            Ok(json!({ "id": id, "action": "upload", "selector": sel, "files": &rest[1..] }))
+            let mut cmd = json!({ "id": id, "action": "upload", "selector": sel, "files": &rest[1..] });
+            if let Some(f) = frame {
+                cmd["frame"] = json!(f);
+            }
+            Ok(cmd)
         }
         "download" => {
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
@@ -1832,6 +1898,31 @@ mod tests {
     fn test_frame_main() {
         let cmd = parse_command(&args("frame main"), &default_flags()).unwrap();
         assert_eq!(cmd["action"], "mainframe");
+    }
+
+    #[test]
+    fn test_fill_with_frame() {
+        let cmd = parse_command(
+            &args("fill --frame iframe[name='payment'] input[name='card'] 4242"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "fill");
+        assert_eq!(cmd["selector"], "input[name='card']");
+        assert_eq!(cmd["value"], "4242");
+        assert_eq!(cmd["frame"], "iframe[name='payment']");
+    }
+
+    #[test]
+    fn test_click_with_frame() {
+        let cmd = parse_command(
+            &args("click --frame name=stripe_frame button.submit"),
+            &default_flags(),
+        )
+        .unwrap();
+        assert_eq!(cmd["action"], "click");
+        assert_eq!(cmd["selector"], "button.submit");
+        assert_eq!(cmd["frame"], "name=stripe_frame");
     }
 
     // === Tabs ===
