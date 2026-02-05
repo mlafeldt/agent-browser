@@ -2095,6 +2095,13 @@ mod tests {
         assert!(matches!(err, ParseError::MissingArguments { context, .. } if context == "--frame"));
     }
 
+    #[test]
+    fn test_frame_flag_followed_by_another_flag() {
+        // --frame followed by another flag should error (value looks like a flag)
+        let err = parse_command(&args("click --frame --timeout btn"), &default_flags()).unwrap_err();
+        assert!(matches!(err, ParseError::MissingArguments { context, .. } if context == "--frame"));
+    }
+
     // === Tabs ===
 
     #[test]
