@@ -2111,6 +2111,15 @@ mod tests {
         assert_eq!(cmd["frame"], "@f1");
     }
 
+    #[test]
+    fn test_frame_absent_when_not_provided() {
+        // Verify frame key is not present when --frame flag is omitted
+        let cmd = parse_command(&args("click btn"), &default_flags()).unwrap();
+        assert_eq!(cmd["action"], "click");
+        assert_eq!(cmd["selector"], "btn");
+        assert!(cmd.get("frame").is_none(), "frame should not be present when --frame not provided");
+    }
+
     // === Tabs ===
 
     #[test]
