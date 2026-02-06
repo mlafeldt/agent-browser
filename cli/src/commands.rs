@@ -172,7 +172,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "click".to_string(),
                 usage: "click [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "click", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "click", "selector": sel }),
+                frame,
+            ))
         }
         "dblclick" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -180,7 +183,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "dblclick".to_string(),
                 usage: "dblclick [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "dblclick", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "dblclick", "selector": sel }),
+                frame,
+            ))
         }
         "fill" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -188,7 +194,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "fill".to_string(),
                 usage: "fill [--frame <frame>] <selector> <text>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "fill", "selector": sel, "value": rest[1..].join(" ") }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "fill", "selector": sel, "value": rest[1..].join(" ") }),
+                frame,
+            ))
         }
         "type" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -196,7 +205,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "type".to_string(),
                 usage: "type [--frame <frame>] <selector> <text>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "type", "selector": sel, "text": rest[1..].join(" ") }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "type", "selector": sel, "text": rest[1..].join(" ") }),
+                frame,
+            ))
         }
         "hover" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -204,7 +216,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "hover".to_string(),
                 usage: "hover [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "hover", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "hover", "selector": sel }),
+                frame,
+            ))
         }
         "focus" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -212,7 +227,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "focus".to_string(),
                 usage: "focus [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "focus", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "focus", "selector": sel }),
+                frame,
+            ))
         }
         "check" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -220,7 +238,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "check".to_string(),
                 usage: "check [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "check", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "check", "selector": sel }),
+                frame,
+            ))
         }
         "uncheck" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -228,7 +249,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "uncheck".to_string(),
                 usage: "uncheck [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "uncheck", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "uncheck", "selector": sel }),
+                frame,
+            ))
         }
         "select" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -258,7 +282,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "drag".to_string(),
                 usage: "drag [--frame <frame>] <source> <target>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "drag", "source": src, "target": tgt }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "drag", "source": src, "target": tgt }),
+                frame,
+            ))
         }
         "upload" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -266,7 +293,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "upload".to_string(),
                 usage: "upload [--frame <frame>] <selector> <files...>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "upload", "selector": sel, "files": &rest[1..] }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "upload", "selector": sel, "files": &rest[1..] }),
+                frame,
+            ))
         }
         "download" => {
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
@@ -318,7 +348,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 .get(1)
                 .and_then(|s| s.parse::<i32>().ok())
                 .unwrap_or(300);
-            Ok(with_frame(json!({ "id": id, "action": "scroll", "direction": dir, "amount": amount }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "scroll", "direction": dir, "amount": amount }),
+                frame,
+            ))
         }
         "scrollintoview" | "scrollinto" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -326,7 +359,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "scrollintoview".to_string(),
                 usage: "scrollintoview [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "scrollintoview", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "scrollintoview", "selector": sel }),
+                frame,
+            ))
         }
 
         // === Wait ===
@@ -376,7 +412,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                         usage: "wait --text <text>",
                     })?;
                 // Use getByText locator to wait for text to appear
-                return Ok(with_frame(json!({ "id": id, "action": "wait", "selector": format!("text={}", text) }), frame.clone()));
+                return Ok(with_frame(
+                    json!({ "id": id, "action": "wait", "selector": format!("text={}", text) }),
+                    frame.clone(),
+                ));
             }
 
             // Check for --download flag: wait --download [path] [--timeout ms]
@@ -410,7 +449,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                         json!({ "id": id, "action": "wait", "timeout": arg.parse::<u64>().unwrap() }),
                     )
                 } else {
-                    Ok(with_frame(json!({ "id": id, "action": "wait", "selector": arg }), frame))
+                    Ok(with_frame(
+                        json!({ "id": id, "action": "wait", "selector": arg }),
+                        frame,
+                    ))
                 }
             } else {
                 Err(ParseError::MissingArguments {
@@ -890,7 +932,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "highlight".to_string(),
                 usage: "highlight [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "highlight", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "highlight", "selector": sel }),
+                frame,
+            ))
         }
 
         // === State ===
@@ -930,7 +975,10 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "tap".to_string(),
                 usage: "tap [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "tap", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "tap", "selector": sel }),
+                frame,
+            ))
         }
         "swipe" => {
             let direction = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
@@ -989,21 +1037,30 @@ fn parse_get(rest: &[&str], id: &str) -> Result<Value, ParseError> {
                 context: "get text".to_string(),
                 usage: "get text [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "gettext", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "gettext", "selector": sel }),
+                frame,
+            ))
         }
         Some("html") => {
             let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "get html".to_string(),
                 usage: "get html [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "innerhtml", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "innerhtml", "selector": sel }),
+                frame,
+            ))
         }
         Some("value") => {
             let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "get value".to_string(),
                 usage: "get value [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "inputvalue", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "inputvalue", "selector": sel }),
+                frame,
+            ))
         }
         Some("attr") => {
             let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
@@ -1014,7 +1071,10 @@ fn parse_get(rest: &[&str], id: &str) -> Result<Value, ParseError> {
                 context: "get attr".to_string(),
                 usage: "get attr [--frame <frame>] <selector> <attribute>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "getattribute", "selector": sel, "attribute": attr }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "getattribute", "selector": sel, "attribute": attr }),
+                frame,
+            ))
         }
         Some("url") => Ok(json!({ "id": id, "action": "url" })),
         Some("title") => Ok(json!({ "id": id, "action": "title" })),
@@ -1023,21 +1083,30 @@ fn parse_get(rest: &[&str], id: &str) -> Result<Value, ParseError> {
                 context: "get count".to_string(),
                 usage: "get count [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "count", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "count", "selector": sel }),
+                frame,
+            ))
         }
         Some("box") => {
             let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "get box".to_string(),
                 usage: "get box [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "boundingbox", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "boundingbox", "selector": sel }),
+                frame,
+            ))
         }
         Some("styles") => {
             let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "get styles".to_string(),
                 usage: "get styles [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "styles", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "styles", "selector": sel }),
+                frame,
+            ))
         }
         Some(sub) => Err(ParseError::UnknownSubcommand {
             subcommand: sub.to_string(),
@@ -1064,21 +1133,30 @@ fn parse_is(rest: &[&str], id: &str) -> Result<Value, ParseError> {
                 context: "is visible".to_string(),
                 usage: "is visible [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "isvisible", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "isvisible", "selector": sel }),
+                frame,
+            ))
         }
         Some("enabled") => {
             let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "is enabled".to_string(),
                 usage: "is enabled [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "isenabled", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "isenabled", "selector": sel }),
+                frame,
+            ))
         }
         Some("checked") => {
             let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "is checked".to_string(),
                 usage: "is checked [--frame <frame>] <selector>",
             })?;
-            Ok(with_frame(json!({ "id": id, "action": "ischecked", "selector": sel }), frame))
+            Ok(with_frame(
+                json!({ "id": id, "action": "ischecked", "selector": sel }),
+                frame,
+            ))
         }
         Some(sub) => Err(ParseError::UnknownSubcommand {
             subcommand: sub.to_string(),
@@ -1931,41 +2009,171 @@ mod tests {
         // Format: (command_str, action, selector_field, selector_val, frame_val)
         let cases: Vec<(&str, &str, &str, &str, &str)> = vec![
             ("click --frame @f1 btn", "click", "selector", "btn", "@f1"),
-            ("dblclick --frame @f1 btn", "dblclick", "selector", "btn", "@f1"),
-            ("fill --frame @f1 input val", "fill", "selector", "input", "@f1"),
-            ("type --frame @f1 input txt", "type", "selector", "input", "@f1"),
+            (
+                "dblclick --frame @f1 btn",
+                "dblclick",
+                "selector",
+                "btn",
+                "@f1",
+            ),
+            (
+                "fill --frame @f1 input val",
+                "fill",
+                "selector",
+                "input",
+                "@f1",
+            ),
+            (
+                "type --frame @f1 input txt",
+                "type",
+                "selector",
+                "input",
+                "@f1",
+            ),
             ("hover --frame @f1 .el", "hover", "selector", ".el", "@f1"),
-            ("focus --frame @f1 input", "focus", "selector", "input", "@f1"),
+            (
+                "focus --frame @f1 input",
+                "focus",
+                "selector",
+                "input",
+                "@f1",
+            ),
             ("check --frame @f1 #cb", "check", "selector", "#cb", "@f1"),
-            ("uncheck --frame @f1 #cb", "uncheck", "selector", "#cb", "@f1"),
-            ("select --frame @f1 sel opt", "select", "selector", "sel", "@f1"),
-            ("upload --frame @f1 input /f", "upload", "selector", "input", "@f1"),
+            (
+                "uncheck --frame @f1 #cb",
+                "uncheck",
+                "selector",
+                "#cb",
+                "@f1",
+            ),
+            (
+                "select --frame @f1 sel opt",
+                "select",
+                "selector",
+                "sel",
+                "@f1",
+            ),
+            (
+                "upload --frame @f1 input /f",
+                "upload",
+                "selector",
+                "input",
+                "@f1",
+            ),
             ("drag --frame @f1 #a #b", "drag", "source", "#a", "@f1"),
-            ("press --frame @f1 input Enter", "press", "selector", "input", "@f1"),
+            (
+                "press --frame @f1 input Enter",
+                "press",
+                "selector",
+                "input",
+                "@f1",
+            ),
             ("wait --frame @f1 .el", "wait", "selector", ".el", "@f1"),
-            ("get text --frame @f1 .el", "gettext", "selector", ".el", "@f1"),
-            ("get html --frame @f1 .el", "innerhtml", "selector", ".el", "@f1"),
-            ("get value --frame @f1 input", "inputvalue", "selector", "input", "@f1"),
-            ("get attr --frame @f1 a href", "getattribute", "selector", "a", "@f1"),
+            (
+                "get text --frame @f1 .el",
+                "gettext",
+                "selector",
+                ".el",
+                "@f1",
+            ),
+            (
+                "get html --frame @f1 .el",
+                "innerhtml",
+                "selector",
+                ".el",
+                "@f1",
+            ),
+            (
+                "get value --frame @f1 input",
+                "inputvalue",
+                "selector",
+                "input",
+                "@f1",
+            ),
+            (
+                "get attr --frame @f1 a href",
+                "getattribute",
+                "selector",
+                "a",
+                "@f1",
+            ),
             ("get count --frame @f1 li", "count", "selector", "li", "@f1"),
-            ("get box --frame @f1 .el", "boundingbox", "selector", ".el", "@f1"),
-            ("get styles --frame @f1 .el", "styles", "selector", ".el", "@f1"),
-            ("is visible --frame @f1 .el", "isvisible", "selector", ".el", "@f1"),
-            ("is enabled --frame @f1 btn", "isenabled", "selector", "btn", "@f1"),
-            ("is checked --frame @f1 #cb", "ischecked", "selector", "#cb", "@f1"),
-            ("scrollintoview --frame @f1 .el", "scrollintoview", "selector", ".el", "@f1"),
-            ("highlight --frame @f1 .el", "highlight", "selector", ".el", "@f1"),
+            (
+                "get box --frame @f1 .el",
+                "boundingbox",
+                "selector",
+                ".el",
+                "@f1",
+            ),
+            (
+                "get styles --frame @f1 .el",
+                "styles",
+                "selector",
+                ".el",
+                "@f1",
+            ),
+            (
+                "is visible --frame @f1 .el",
+                "isvisible",
+                "selector",
+                ".el",
+                "@f1",
+            ),
+            (
+                "is enabled --frame @f1 btn",
+                "isenabled",
+                "selector",
+                "btn",
+                "@f1",
+            ),
+            (
+                "is checked --frame @f1 #cb",
+                "ischecked",
+                "selector",
+                "#cb",
+                "@f1",
+            ),
+            (
+                "scrollintoview --frame @f1 .el",
+                "scrollintoview",
+                "selector",
+                ".el",
+                "@f1",
+            ),
+            (
+                "highlight --frame @f1 .el",
+                "highlight",
+                "selector",
+                ".el",
+                "@f1",
+            ),
             ("tap --frame @f1 btn", "tap", "selector", "btn", "@f1"),
-            ("scroll --frame @f1 down", "scroll", "direction", "down", "@f1"),
+            (
+                "scroll --frame @f1 down",
+                "scroll",
+                "direction",
+                "down",
+                "@f1",
+            ),
             // Test --frame=value syntax
-            ("fill --frame=iframe.x input val", "fill", "selector", "input", "iframe.x"),
+            (
+                "fill --frame=iframe.x input val",
+                "fill",
+                "selector",
+                "input",
+                "iframe.x",
+            ),
         ];
 
         for (cmd_str, action, sel_field, sel_val, frame_val) in cases {
             let cmd = parse_command(&args(cmd_str), &default_flags())
                 .unwrap_or_else(|e| panic!("Failed to parse '{}': {:?}", cmd_str, e));
             assert_eq!(cmd["action"], action, "action mismatch for '{}'", cmd_str);
-            assert_eq!(cmd[sel_field], sel_val, "selector mismatch for '{}'", cmd_str);
+            assert_eq!(
+                cmd[sel_field], sel_val,
+                "selector mismatch for '{}'",
+                cmd_str
+            );
             assert_eq!(cmd["frame"], frame_val, "frame mismatch for '{}'", cmd_str);
         }
     }
@@ -1981,20 +2189,27 @@ mod tests {
     #[test]
     fn test_frame_flag_missing_value() {
         let err = parse_command(&args("click --frame"), &default_flags()).unwrap_err();
-        assert!(matches!(err, ParseError::MissingArguments { context, .. } if context == "--frame"));
+        assert!(
+            matches!(err, ParseError::MissingArguments { context, .. } if context == "--frame")
+        );
     }
 
     #[test]
     fn test_frame_flag_empty_value() {
         let err = parse_command(&args("click --frame= btn"), &default_flags()).unwrap_err();
-        assert!(matches!(err, ParseError::MissingArguments { context, .. } if context == "--frame"));
+        assert!(
+            matches!(err, ParseError::MissingArguments { context, .. } if context == "--frame")
+        );
     }
 
     #[test]
     fn test_frame_flag_followed_by_another_flag() {
         // --frame followed by another flag should error (value looks like a flag)
-        let err = parse_command(&args("click --frame --timeout btn"), &default_flags()).unwrap_err();
-        assert!(matches!(err, ParseError::MissingArguments { context, .. } if context == "--frame"));
+        let err =
+            parse_command(&args("click --frame --timeout btn"), &default_flags()).unwrap_err();
+        assert!(
+            matches!(err, ParseError::MissingArguments { context, .. } if context == "--frame")
+        );
     }
 
     #[test]
@@ -2012,7 +2227,10 @@ mod tests {
         let cmd = parse_command(&args("click btn"), &default_flags()).unwrap();
         assert_eq!(cmd["action"], "click");
         assert_eq!(cmd["selector"], "btn");
-        assert!(cmd.get("frame").is_none(), "frame should not be present when --frame not provided");
+        assert!(
+            cmd.get("frame").is_none(),
+            "frame should not be present when --frame not provided"
+        );
     }
 
     // === Tabs ===
