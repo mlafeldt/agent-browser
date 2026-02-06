@@ -679,6 +679,11 @@ async function handleScroll(command: ScrollCommand, browser: BrowserManager): Pr
       throw toAIFriendlyError(error, command.selector);
     }
   } else {
+    if (command.frame) {
+      throw new Error(
+        '--frame requires a selector. Use: scroll --frame <frame> <selector> <direction>'
+      );
+    }
     // Scroll the page
     let deltaX = command.x ?? 0;
     let deltaY = command.y ?? 0;
