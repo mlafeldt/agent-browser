@@ -403,6 +403,32 @@ describe('BrowserManager', () => {
       const h1 = await page.locator('h1').textContent();
       expect(h1).toBe('Example Domain');
     });
+
+    it('should resolve locator within iframe using frame param', async () => {
+      const page = browser.getPage();
+      await page.setContent(`
+        <html>
+          <body>
+            <iframe name="testframe" srcdoc="<button id='btn'>Frame Button</button>"></iframe>
+          </body>
+        </html>
+      `);
+      // Wait for iframe to load
+      await page.waitForSelector('iframe[name="testframe"]');
+      await page.frameLocator('iframe[name="testframe"]').locator('#btn').waitFor();
+
+      const locator = browser.getLocator('#btn', 'name=testframe');
+      const text = await locator.textContent();
+      expect(text).toBe('Frame Button');
+    });
+
+    it('should throw for invalid frame selector', async () => {
+      const page = browser.getPage();
+      await page.setContent('<html><body><div>No iframe</div></body></html>');
+
+      const locator = browser.getLocator('#btn', 'name=nonexistent');
+      await expect(locator.click({ timeout: 1000 })).rejects.toThrow();
+    });
   });
 
   describe('scoped headers', () => {
