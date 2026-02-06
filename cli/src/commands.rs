@@ -4,6 +4,14 @@ use std::io::{self, BufRead};
 
 use crate::flags::Flags;
 
+/// Add frame field to command if present
+fn with_frame(mut cmd: Value, frame: Option<String>) -> Value {
+    if let Some(f) = frame {
+        cmd["frame"] = json!(f);
+    }
+    cmd
+}
+
 /// Extract --frame flag from args, returning (frame_selector, remaining_args)
 /// Supports both `--frame value` and `--frame=value` syntax
 /// Returns Err if --frame is provided without a value
@@ -164,11 +172,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "click".to_string(),
                 usage: "click [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "click", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "click", "selector": sel }), frame))
         }
         "dblclick" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -176,11 +180,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "dblclick".to_string(),
                 usage: "dblclick [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "dblclick", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "dblclick", "selector": sel }), frame))
         }
         "fill" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -188,11 +188,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "fill".to_string(),
                 usage: "fill [--frame <frame>] <selector> <text>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "fill", "selector": sel, "value": rest[1..].join(" ") });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "fill", "selector": sel, "value": rest[1..].join(" ") }), frame))
         }
         "type" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -200,12 +196,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "type".to_string(),
                 usage: "type [--frame <frame>] <selector> <text>",
             })?;
-            let mut cmd =
-                json!({ "id": id, "action": "type", "selector": sel, "text": rest[1..].join(" ") });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "type", "selector": sel, "text": rest[1..].join(" ") }), frame))
         }
         "hover" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -213,11 +204,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "hover".to_string(),
                 usage: "hover [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "hover", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "hover", "selector": sel }), frame))
         }
         "focus" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -225,11 +212,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "focus".to_string(),
                 usage: "focus [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "focus", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "focus", "selector": sel }), frame))
         }
         "check" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -237,11 +220,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "check".to_string(),
                 usage: "check [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "check", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "check", "selector": sel }), frame))
         }
         "uncheck" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -249,11 +228,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "uncheck".to_string(),
                 usage: "uncheck [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "uncheck", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "uncheck", "selector": sel }), frame))
         }
         "select" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -266,15 +241,12 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 usage: "select [--frame <frame>] <selector> <value...>",
             })?;
             let values = &rest[1..];
-            let mut cmd = if values.len() == 1 {
+            let cmd = if values.len() == 1 {
                 json!({ "id": id, "action": "select", "selector": sel, "values": values[0] })
             } else {
                 json!({ "id": id, "action": "select", "selector": sel, "values": values })
             };
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(cmd, frame))
         }
         "drag" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -286,11 +258,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "drag".to_string(),
                 usage: "drag [--frame <frame>] <source> <target>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "drag", "source": src, "target": tgt });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "drag", "source": src, "target": tgt }), frame))
         }
         "upload" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -298,12 +266,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "upload".to_string(),
                 usage: "upload [--frame <frame>] <selector> <files...>",
             })?;
-            let mut cmd =
-                json!({ "id": id, "action": "upload", "selector": sel, "files": &rest[1..] });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "upload", "selector": sel, "files": &rest[1..] }), frame))
         }
         "download" => {
             let sel = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
@@ -325,15 +288,12 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 usage: "press [--frame <frame>] [selector] <key>",
             })?;
             // If two args, first is selector, second is key
-            let mut cmd = if let Some(key_arg) = rest.get(1) {
+            let cmd = if let Some(key_arg) = rest.get(1) {
                 json!({ "id": id, "action": "press", "selector": key, "key": key_arg })
             } else {
                 json!({ "id": id, "action": "press", "key": key })
             };
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(cmd, frame))
         }
         "keydown" => {
             let key = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
@@ -358,11 +318,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 .get(1)
                 .and_then(|s| s.parse::<i32>().ok())
                 .unwrap_or(300);
-            let mut cmd = json!({ "id": id, "action": "scroll", "direction": dir, "amount": amount });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "scroll", "direction": dir, "amount": amount }), frame))
         }
         "scrollintoview" | "scrollinto" => {
             let (frame, rest) = extract_frame_flag(&rest)?;
@@ -370,11 +326,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "scrollintoview".to_string(),
                 usage: "scrollintoview [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "scrollintoview", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "scrollintoview", "selector": sel }), frame))
         }
 
         // === Wait ===
@@ -424,12 +376,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                         usage: "wait --text <text>",
                     })?;
                 // Use getByText locator to wait for text to appear
-                let mut cmd =
-                    json!({ "id": id, "action": "wait", "selector": format!("text={}", text) });
-                if let Some(f) = &frame {
-                    cmd["frame"] = json!(f);
-                }
-                return Ok(cmd);
+                return Ok(with_frame(json!({ "id": id, "action": "wait", "selector": format!("text={}", text) }), frame.clone()));
             }
 
             // Check for --download flag: wait --download [path] [--timeout ms]
@@ -463,11 +410,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                         json!({ "id": id, "action": "wait", "timeout": arg.parse::<u64>().unwrap() }),
                     )
                 } else {
-                    let mut cmd = json!({ "id": id, "action": "wait", "selector": arg });
-                    if let Some(f) = frame {
-                        cmd["frame"] = json!(f);
-                    }
-                    Ok(cmd)
+                    Ok(with_frame(json!({ "id": id, "action": "wait", "selector": arg }), frame))
                 }
             } else {
                 Err(ParseError::MissingArguments {
@@ -947,11 +890,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "highlight".to_string(),
                 usage: "highlight [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "highlight", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "highlight", "selector": sel }), frame))
         }
 
         // === State ===
@@ -991,11 +930,7 @@ pub fn parse_command(args: &[String], flags: &Flags) -> Result<Value, ParseError
                 context: "tap".to_string(),
                 usage: "tap [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "tap", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "tap", "selector": sel }), frame))
         }
         "swipe" => {
             let direction = rest.get(0).ok_or_else(|| ParseError::MissingArguments {
@@ -1054,33 +989,21 @@ fn parse_get(rest: &[&str], id: &str) -> Result<Value, ParseError> {
                 context: "get text".to_string(),
                 usage: "get text [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "gettext", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "gettext", "selector": sel }), frame))
         }
         Some("html") => {
             let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "get html".to_string(),
                 usage: "get html [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "innerhtml", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "innerhtml", "selector": sel }), frame))
         }
         Some("value") => {
             let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "get value".to_string(),
                 usage: "get value [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "inputvalue", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "inputvalue", "selector": sel }), frame))
         }
         Some("attr") => {
             let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
@@ -1091,11 +1014,7 @@ fn parse_get(rest: &[&str], id: &str) -> Result<Value, ParseError> {
                 context: "get attr".to_string(),
                 usage: "get attr [--frame <frame>] <selector> <attribute>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "getattribute", "selector": sel, "attribute": attr });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "getattribute", "selector": sel, "attribute": attr }), frame))
         }
         Some("url") => Ok(json!({ "id": id, "action": "url" })),
         Some("title") => Ok(json!({ "id": id, "action": "title" })),
@@ -1104,33 +1023,21 @@ fn parse_get(rest: &[&str], id: &str) -> Result<Value, ParseError> {
                 context: "get count".to_string(),
                 usage: "get count [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "count", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "count", "selector": sel }), frame))
         }
         Some("box") => {
             let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "get box".to_string(),
                 usage: "get box [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "boundingbox", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "boundingbox", "selector": sel }), frame))
         }
         Some("styles") => {
             let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "get styles".to_string(),
                 usage: "get styles [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "styles", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "styles", "selector": sel }), frame))
         }
         Some(sub) => Err(ParseError::UnknownSubcommand {
             subcommand: sub.to_string(),
@@ -1157,33 +1064,21 @@ fn parse_is(rest: &[&str], id: &str) -> Result<Value, ParseError> {
                 context: "is visible".to_string(),
                 usage: "is visible [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "isvisible", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "isvisible", "selector": sel }), frame))
         }
         Some("enabled") => {
             let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "is enabled".to_string(),
                 usage: "is enabled [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "isenabled", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "isenabled", "selector": sel }), frame))
         }
         Some("checked") => {
             let sel = args.get(0).ok_or_else(|| ParseError::MissingArguments {
                 context: "is checked".to_string(),
                 usage: "is checked [--frame <frame>] <selector>",
             })?;
-            let mut cmd = json!({ "id": id, "action": "ischecked", "selector": sel });
-            if let Some(f) = frame {
-                cmd["frame"] = json!(f);
-            }
-            Ok(cmd)
+            Ok(with_frame(json!({ "id": id, "action": "ischecked", "selector": sel }), frame))
         }
         Some(sub) => Err(ParseError::UnknownSubcommand {
             subcommand: sub.to_string(),
